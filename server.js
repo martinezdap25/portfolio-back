@@ -7,24 +7,10 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middlewares
-const allowedOrigins = [
-    'http://localhost:3000',
-    'https://ignacio-martinez.vercel.app/es',
-    'https://ignacio-martinez.vercel.app/en',
-    'https://ignacio-martinez.vercel.app',
-];
-
+// CORS - permitir todo temporalmente
 app.use(cors({
-    origin: (origin, callback) => {
-        console.log('🌐 Verificando origin:', origin);
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('🌪️ Origin no permitido por CORS: ' + origin));
-        }
-    },
-    credentials: true,
+    origin: '*', // ⚠️ Esto permite cualquier origen (solo para pruebas)
+    credentials: false // no se puede usar true con origin '*'
 }));
 
 app.use(express.json());
