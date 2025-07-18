@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 // Middlewares
 const allowedOrigins = [
     'http://localhost:3000',                  // tu frontend local (ajusta puerto si es otro)
-    'https://tu-frontend-deploy.vercel.app'  // tu frontend deployado, poné tu URL real aquí
+    'https://portfolio-igna-martinez-npc725r51.vercel.app'  // tu frontend deployado, poné tu URL real aquí
 ];
 
 app.use(cors({
