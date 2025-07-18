@@ -9,19 +9,20 @@ const PORT = process.env.PORT || 3001;
 
 // Middlewares
 const allowedOrigins = [
-    'http://localhost:3000',                  // tu frontend local (ajusta puerto si es otro)
-    'https://portfolio-igna-martinez-npc725r51.vercel.app'  // tu frontend deployado, poné tu URL real aquí
+    'http://localhost:3000',
+    'https://ignacio-martinez.vercel.app',
 ];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true); // para peticiones sin origin (Postman, curl)
-        if (allowedOrigins.includes(origin)) {
+    origin: (origin, callback) => {
+        console.log('🌐 Verificando origin:', origin);
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('No permitido por CORS'));
+            callback(new Error('🌪️ Origin no permitido por CORS: ' + origin));
         }
-    }
+    },
+    credentials: true,
 }));
 
 app.use(express.json());
