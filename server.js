@@ -8,7 +8,22 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:3000',                  // tu frontend local (ajusta puerto si es otro)
+    'https://tu-frontend-deploy.vercel.app'  // tu frontend deployado, poné tu URL real aquí
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true); // para peticiones sin origin (Postman, curl)
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('No permitido por CORS'));
+        }
+    }
+}));
+
 app.use(express.json());
 
 // Ruta base de prueba
