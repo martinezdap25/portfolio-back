@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3001;
 // Middlewares
 const allowedOrigins = [
     'http://localhost:3000',
+    'https://ignacio-martinez.vercel.app/es',
+    'https://ignacio-martinez.vercel.app/en',
     'https://ignacio-martinez.vercel.app',
 ];
 
