@@ -2,8 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project');
-const Category = require('../models/Category'); // 👈 IMPORTANTE
-const Technology = require('../models/Technology'); // 👈 IMPORTANTE
+const Category = require('../models/Category');
+const Technology = require('../models/Technology');
+const Image = require('../models/Image');
 
 // GET /projects
 router.get('/', async (req, res) => {
@@ -65,8 +66,9 @@ router.get('/', async (req, res) => {
             .skip(skip)
             .limit(parseInt(limit))
             .sort(sort)
-            .populate('technologies') // 👈 Esto ahora funcionará
-            .populate('category');    // 👈 Y esto también
+            .populate('technologies')
+            .populate('category')
+            .populate('images');
 
         res.json({
             data: projects,
@@ -84,7 +86,8 @@ router.get('/:id', async (req, res) => {
     try {
         const project = await Project.findById(req.params.id)
             .populate('technologies')
-            .populate('category');
+            .populate('category')
+            .populate('images');
 
         if (!project) {
             return res.status(404).json({ message: 'Proyecto no encontrado' });
