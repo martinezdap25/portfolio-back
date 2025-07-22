@@ -1,6 +1,9 @@
+// routes/projects.js
 const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project');
+const Category = require('../models/Category'); // 👈 IMPORTANTE
+const Technology = require('../models/Technology'); // 👈 IMPORTANTE
 
 // GET /projects
 router.get('/', async (req, res) => {
@@ -57,12 +60,13 @@ router.get('/', async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const total = await Project.countDocuments(filters);
+
         const projects = await Project.find(filters)
             .skip(skip)
             .limit(parseInt(limit))
             .sort(sort)
-            .populate('technologies') // ← ← ← agregamos esto
-            .populate('category');    // ← ← ← y esto
+            .populate('technologies') // 👈 Esto ahora funcionará
+            .populate('category');    // 👈 Y esto también
 
         res.json({
             data: projects,
@@ -79,7 +83,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const project = await Project.findById(req.params.id)
-            .populate('technologies') // ← ← ← también aquí
+            .populate('technologies')
             .populate('category');
 
         if (!project) {
@@ -88,7 +92,7 @@ router.get('/:id', async (req, res) => {
 
         res.json(project);
     } catch (err) {
-        res.status(500).json({ message: 'Error al obtener el proyecto', error: err });
+        res.status(500).json({ message: 'Error al obtener el proyecto', error: err.message });
     }
 });
 
