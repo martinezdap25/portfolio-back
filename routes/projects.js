@@ -5,6 +5,7 @@ const Project = require('../models/Project');
 const Category = require('../models/Category');
 const Technology = require('../models/Technology');
 const Image = require('../models/Image');
+const mongoose = require('mongoose');
 
 // GET /projects
 router.get('/', async (req, res) => {
@@ -84,7 +85,13 @@ router.get('/', async (req, res) => {
 // GET /projects/:id
 router.get('/:id', async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id)
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'ID de proyecto inválido' });
+        }
+
+        const project = await Project.findById(id)
             .populate('technologies')
             .populate('category')
             .populate('images');
@@ -95,7 +102,9 @@ router.get('/:id', async (req, res) => {
 
         res.json(project);
     } catch (err) {
-        res.status(500).json({ message: 'Error al obtener el proyecto', error: err.message });
+        // Es una buena práctica registrar el error completo en la consola para depuración
+        console.error('Error al obtener el proyecto por ID:', err);
+        res.status(500).json({ message: 'Error interno del servidor al obtener el proyecto', error: err.message });
     }
 });
 
