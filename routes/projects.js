@@ -24,13 +24,28 @@ router.get('/', async (req, res) => {
         const filters = {};
 
         if (category) {
-            const categories = category.split(',');
-            filters.category = { $in: categories };
+            const categoryNames = category.split(',');
+            const categoryDocs = await Category.find({ name: { $in: categoryNames } }).select('_id');
+            if (categoryDocs.length > 0) {
+                filters.category = { $in: categoryDocs.map(c => c._id) };
+            } else {
+                return res.status(400).json({ message: 'Categoría inválida' });
+            }
         }
 
         if (technology) {
-            const techs = technology.split(',');
-            filters.technologies = { $all: techs };
+            const techNames = technology.split(',');
+            const techDocs = await Technology.find({ name: { $in: techNames } }).select('_id');
+            const techIds = techDocs.map(t => t._id);
+
+            // Si no se encontraron todas las tecnologías solicitadas, ningún proyecto puede coincidir.
+            if (techIds.length !== techNames.length) {
+                return res.json({ data: [], total: 0, page: 1, pages: 0 });
+            }
+
+            if (techIds.length > 0) {
+                filters.technologies = { $all: techIds };
+            }
         }
 
         if (year) {
