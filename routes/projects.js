@@ -82,6 +82,48 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /projects/technologies - Obtener tecnologías disponibles para filtros
+router.get('/technologies', async (req, res) => {
+    try {
+        // Esto devuelve solo las tecnologías que están realmente en uso en al menos un proyecto.
+        const usedTechIds = await Project.distinct('technologies');
+        const technologies = await Technology.find({ '_id': { $in: usedTechIds } }).sort({ name: 1 });
+        res.json(technologies);
+    } catch (err) {
+        console.error('Error al obtener las tecnologías:', err);
+        res.status(500).json({ message: 'Error al obtener las tecnologías', error: err.message });
+    }
+});
+
+// GET /projects/categories - Obtener categorías disponibles para filtros
+router.get('/categories', async (req, res) => {
+    try {
+        // Esto devuelve solo las categorías que están realmente en uso en al menos un proyecto.
+        const usedCatIds = await Project.distinct('category');
+        const categories = await Category.find({ '_id': { $in: usedCatIds } }).sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        console.error('Error al obtener las categorías:', err);
+        res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
+    }
+});
+
+// GET /projects/years - Obtener años de proyectos para filtros
+router.get('/years', async (req, res) => {
+    try {
+        const result = await Project.aggregate([
+            { $project: { year: { $year: '$createdAt' } } },
+            { $group: { _id: '$year' } },
+            { $sort: { _id: -1 } }
+        ]);
+        const years = result.map(item => item._id.toString());
+        res.json(years);
+    } catch (err) {
+        console.error('Error al obtener los años:', err);
+        res.status(500).json({ message: 'Error al obtener los años', error: err.message });
+    }
+});
+
 // GET /projects/:id
 router.get('/:id', async (req, res) => {
     try {

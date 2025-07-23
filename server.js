@@ -24,10 +24,7 @@ const projectsRoutes = require('./routes/projects');
 app.use('/projects', projectsRoutes);
 
 // Conexión a MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('🟢 Conectado a MongoDB');
         app.listen(PORT, () => {
