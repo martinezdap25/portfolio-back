@@ -127,7 +127,7 @@ router.get('/categories', async (req, res) => {
 router.get('/years', async (req, res) => {
     try {
         const result = await Project.aggregate([
-            { $project: { year: { $year: '$createdAt' } } },
+            { $project: { year: { $year: { $toDate: "$createdAt" } } } },
             { $group: { _id: '$year' } },
             { $sort: { _id: -1 } }
         ]);
