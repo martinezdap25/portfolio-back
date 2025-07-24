@@ -10,91 +10,18 @@ const mongoose = require('mongoose');
 // GET /projects
 router.get('/', async (req, res) => {
     try {
-        let {
-            category,
-            technology,
-            year,
-            favoritesOrFeatured,
-            orderBy,
-            lang = 'es',
-            page = 1,
-            limit = 6,
-        } = req.query;
+        let { page = 1, limit = 6 } = req.query;
+        page = parseInt(page);
+        limit = parseInt(limit);
 
-        // Normalizar para que sean arrays si vienen como string separados por coma
-        if (category && !Array.isArray(category)) {
-            category = category.split(',');
-        }
-        if (technology && !Array.isArray(technology)) {
-            technology = technology.split(',');
-        }
+        const skip = (page - 1) * limit;
 
-        const filters = {};
+        const total = await Project.countDocuments();
 
-        if (category && category.length > 0) {
-            const categoryIds = category.filter(c => mongoose.Types.ObjectId.isValid(c));
-            const categoryNames = category.filter(c => !mongoose.Types.ObjectId.isValid(c));
-
-            const categoriesFromNames = categoryNames.length > 0
-                ? await Category.find({ name: { $in: categoryNames } }).select('_id')
-                : [];
-
-            const allCategoryIds = [
-                ...categoryIds,
-                ...categoriesFromNames.map(c => c._id.toString())
-            ];
-
-            if (allCategoryIds.length === 0) {
-                return res.status(400).json({ message: 'Categoría(s) inválida(s)' });
-            }
-
-            filters.category = { $in: allCategoryIds };
-        }
-
-        if (technology && technology.length > 0) {
-            const techDocs = await Technology.find({ name: { $in: technology } }).select('_id');
-
-            if (techDocs.length !== technology.length) {
-                return res.json({ data: [], total: 0, page: 1, pages: 0 });
-            }
-
-            filters.technologies = { $all: techDocs.map(t => t._id) };
-        }
-
-        if (year) {
-            const start = new Date(`${year}-01-01T00:00:00.000Z`);
-            const end = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
-            filters.createdAt = { $gte: start, $lt: end };
-        }
-
-        if (favoritesOrFeatured === 'Sí') {
-            filters.featured = true;
-        } else if (favoritesOrFeatured === 'No') {
-            filters.featured = false;
-        }
-
-        let sort = {};
-        switch (orderBy) {
-            case 'Más reciente':
-                sort = { createdAt: -1 };
-                break;
-            case 'Más antiguo':
-                sort = { createdAt: 1 };
-                break;
-            case 'Nombre (A-Z)':
-                sort = { [`title.${lang}`]: 1 };
-                break;
-            default:
-                sort = { createdAt: -1 };
-        }
-
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-        const total = await Project.countDocuments(filters);
-
-        const projects = await Project.find(filters)
+        const projects = await Project.find()
             .skip(skip)
-            .limit(parseInt(limit))
-            .sort(sort)
+            .limit(limit)
+            .sort({ createdAt: -1 })
             .populate('technologies')
             .populate('category')
             .populate('images');
@@ -102,11 +29,11 @@ router.get('/', async (req, res) => {
         res.json({
             data: projects,
             total,
-            page: parseInt(page),
+            page,
             pages: Math.ceil(total / limit),
         });
     } catch (err) {
-        console.error('Error en GET /projects:', err);
+        console.error('❌ Error en GET /projects:', err);
         res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
     }
 });
