@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 // GET /projects
 router.get('/', async (req, res) => {
     try {
-        const {
+        let {
             category,
             technology,
             year,
@@ -21,35 +21,44 @@ router.get('/', async (req, res) => {
             limit = 6,
         } = req.query;
 
-        const filters = {};
-
-        if (category) {
-            // Si es un ID válido, usarlo directamente
-            if (mongoose.Types.ObjectId.isValid(category)) {
-                filters.category = category;
-            } else {
-                // Si es nombre, buscar el ID correspondiente
-                const categoryDoc = await Category.findOne({ name: category }).select('_id');
-                if (!categoryDoc) {
-                    return res.status(400).json({ message: 'Categoría no encontrada' });
-                }
-                filters.category = categoryDoc._id;
-            }
+        // Normalizar para que sean arrays si vienen como string separados por coma
+        if (category && !Array.isArray(category)) {
+            category = category.split(',');
+        }
+        if (technology && !Array.isArray(technology)) {
+            technology = technology.split(',');
         }
 
-        if (technology) {
-            const techNames = technology.split(',');
-            const techDocs = await Technology.find({ name: { $in: techNames } }).select('_id');
-            const techIds = techDocs.map(t => t._id);
+        const filters = {};
 
-            // Si no se encontraron todas las tecnologías solicitadas, ningún proyecto puede coincidir.
-            if (techIds.length !== techNames.length) {
+        if (category && category.length > 0) {
+            const categoryIds = category.filter(c => mongoose.Types.ObjectId.isValid(c));
+            const categoryNames = category.filter(c => !mongoose.Types.ObjectId.isValid(c));
+
+            const categoriesFromNames = categoryNames.length > 0
+                ? await Category.find({ name: { $in: categoryNames } }).select('_id')
+                : [];
+
+            const allCategoryIds = [
+                ...categoryIds,
+                ...categoriesFromNames.map(c => c._id.toString())
+            ];
+
+            if (allCategoryIds.length === 0) {
+                return res.status(400).json({ message: 'Categoría(s) inválida(s)' });
+            }
+
+            filters.category = { $in: allCategoryIds };
+        }
+
+        if (technology && technology.length > 0) {
+            const techDocs = await Technology.find({ name: { $in: technology } }).select('_id');
+
+            if (techDocs.length !== technology.length) {
                 return res.json({ data: [], total: 0, page: 1, pages: 0 });
             }
 
-            if (techIds.length > 0) {
-                filters.technologies = { $all: techIds };
-            }
+            filters.technologies = { $all: techDocs.map(t => t._id) };
         }
 
         if (year) {
@@ -97,6 +106,7 @@ router.get('/', async (req, res) => {
             pages: Math.ceil(total / limit),
         });
     } catch (err) {
+        console.error('Error en GET /projects:', err);
         res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
     }
 });
