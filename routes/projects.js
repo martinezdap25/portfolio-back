@@ -8,37 +8,38 @@ const Image = require('../models/Image');
 const mongoose = require('mongoose');
 
 router.get('/', async (req, res) => {
-  try {
-    let { page = 1, limit = 6, category } = req.query;
-    page = parseInt(page);
-    limit = parseInt(limit);
-    const skip = (page - 1) * limit;
+    try {
+        let { page = 1, limit = 6, category } = req.query;
+        page = parseInt(page);
+        limit = parseInt(limit);
+        const skip = (page - 1) * limit;
 
-    const filter = {};
-    if (category) {
-      filter.category = new mongoose.Types.ObjectId(category);
+        const filter = {};
+        if (category) {
+            const categoryArray = Array.isArray(category) ? category : [category];
+            filter.category = { $in: categoryArray.map(id => new mongoose.Types.ObjectId(id)) };
+        }
+
+        const total = await Project.countDocuments(filter);
+
+        const projects = await Project.find(filter)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .populate('technologies')
+            .populate('category')
+            .populate('images');
+
+        res.json({
+            data: projects,
+            total,
+            page,
+            pages: Math.ceil(total / limit),
+        });
+    } catch (err) {
+        console.error('❌ Error en GET /projects:', err);
+        res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
     }
-
-    const total = await Project.countDocuments(filter);
-
-    const projects = await Project.find(filter)
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .populate('technologies')
-      .populate('category')
-      .populate('images');
-
-    res.json({
-      data: projects,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
-  } catch (err) {
-    console.error('❌ Error en GET /projects:', err);
-    res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
-  }
 });
 
 // GET /projects/technologies - Obtener tecnologías disponibles para filtros
