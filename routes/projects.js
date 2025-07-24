@@ -7,35 +7,38 @@ const Technology = require('../models/Technology');
 const Image = require('../models/Image');
 const mongoose = require('mongoose');
 
-// GET /projects
 router.get('/', async (req, res) => {
-    try {
-        let { page = 1, limit = 6 } = req.query;
-        page = parseInt(page);
-        limit = parseInt(limit);
+  try {
+    let { page = 1, limit = 6, category } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const skip = (page - 1) * limit;
 
-        const skip = (page - 1) * limit;
-
-        const total = await Project.countDocuments();
-
-        const projects = await Project.find()
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 })
-            .populate('technologies')
-            .populate('category')
-            .populate('images');
-
-        res.json({
-            data: projects,
-            total,
-            page,
-            pages: Math.ceil(total / limit),
-        });
-    } catch (err) {
-        console.error('❌ Error en GET /projects:', err);
-        res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
+    const filter = {};
+    if (category) {
+      filter.category = new mongoose.Types.ObjectId(category);
     }
+
+    const total = await Project.countDocuments(filter);
+
+    const projects = await Project.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .populate('technologies')
+      .populate('category')
+      .populate('images');
+
+    res.json({
+      data: projects,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error('❌ Error en GET /projects:', err);
+    res.status(500).json({ message: 'Error al obtener los proyectos', error: err.message });
+  }
 });
 
 // GET /projects/technologies - Obtener tecnologías disponibles para filtros
@@ -54,10 +57,9 @@ router.get('/technologies', async (req, res) => {
 // GET /projects/categories - Obtener categorías disponibles para filtros
 router.get('/categories', async (req, res) => {
     try {
-        // Esto devuelve solo las categorías que están realmente en uso en al menos un proyecto.
-        const usedCatIds = await Project.distinct('category');
-        const categories = await Category.find({ '_id': { $in: usedCatIds } }).sort({ name: 1 });
+        const categories = await Category.find().sort({ name: 1 }); // ordena alfabéticamente
         res.json(categories);
+
     } catch (err) {
         console.error('Error al obtener las categorías:', err);
         res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
