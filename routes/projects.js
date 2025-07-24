@@ -24,12 +24,16 @@ router.get('/', async (req, res) => {
         const filters = {};
 
         if (category) {
-            const categoryNames = category.split(',');
-            const categoryDocs = await Category.find({ name: { $in: categoryNames } }).select('_id');
-            if (categoryDocs.length > 0) {
-                filters.category = { $in: categoryDocs.map(c => c._id) };
+            // Si es un ID válido, usarlo directamente
+            if (mongoose.Types.ObjectId.isValid(category)) {
+                filters.category = category;
             } else {
-                return res.status(400).json({ message: 'Categoría inválida' });
+                // Si es nombre, buscar el ID correspondiente
+                const categoryDoc = await Category.findOne({ name: category }).select('_id');
+                if (!categoryDoc) {
+                    return res.status(400).json({ message: 'Categoría no encontrada' });
+                }
+                filters.category = categoryDoc._id;
             }
         }
 
