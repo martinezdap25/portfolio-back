@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 router.get('/', async (req, res) => {
     try {
-        let { page = 1, limit = 6, category } = req.query;
+        let { page = 1, limit = 6, category, technology } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
@@ -19,6 +19,12 @@ router.get('/', async (req, res) => {
             const categoryArray = Array.isArray(category) ? category : [category];
             // Usamos $in para que coincida con cualquier categoría en el array (comportamiento OR).
             filter.category = { $in: categoryArray.map(id => new mongoose.Types.ObjectId(id)) };
+        }
+
+        if (technology) {
+            const technologyArray = Array.isArray(technology) ? technology : [technology];
+            // Usamos $in para encontrar proyectos que contengan AL MENOS UNA de las tecnologías seleccionadas (comportamiento OR).
+            filter.technologies = { $in: technologyArray.map(id => new mongoose.Types.ObjectId(id)) };
         }
 
         const total = await Project.countDocuments(filter);
