@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = [
     'http://localhost:3000', // Tu frontend en desarrollo
-    'https://portfolio-ignacio-martinez.vercel.app' // Asumo que esta es la URL de tu frontend desplegado, ¡ajústala si es diferente!
+    'https://ignacio-martinez.vercel.app' // Asumo que esta es la URL de tu frontend desplegado, ¡ajústala si es diferente!
 ];
 
 const corsOptions = {
