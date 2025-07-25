@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
 
         if (technology) {
             const technologyArray = Array.isArray(technology) ? technology : [technology];
-            filter.technologies = { $in: technologyArray.map(id => new mongoose.Types.ObjectId(id)) };
+            // Usamos $all para que el proyecto deba tener TODAS las tecnologías seleccionadas (lógica "AND").
+            filter.technologies = { $all: technologyArray.map(id => new mongoose.Types.ObjectId(id)) };
         }
 
         if (year) {
@@ -35,8 +36,8 @@ router.get('/', async (req, res) => {
         }
 
         // Nuevo filtro para proyectos destacados (favoritos)
-        if (featured === 'true') {
-            filter.featured = true;
+        if (featured != null) {
+            filter.featured = (featured === 'true');
         }
 
         // Opciones de ordenamiento dinámico
