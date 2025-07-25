@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
         const filter = {};
         if (category) {
             const categoryArray = Array.isArray(category) ? category : [category];
+            // Usamos $in para que coincida con cualquier categoría en el array (comportamiento OR).
             filter.category = { $in: categoryArray.map(id => new mongoose.Types.ObjectId(id)) };
         }
 
@@ -58,7 +59,9 @@ router.get('/technologies', async (req, res) => {
 // GET /projects/categories - Obtener categorías disponibles para filtros
 router.get('/categories', async (req, res) => {
     try {
-        const categories = await Category.find().sort({ name: 1 }); // ordena alfabéticamente
+        // Devolvemos solo las categorías que están realmente en uso en al menos un proyecto.
+        const usedCategoryIds = await Project.distinct('category');
+        const categories = await Category.find({ '_id': { $in: usedCategoryIds } }).sort({ name: 1 }); // ordena alfabéticamente
         res.json(categories);
 
     } catch (err) {
