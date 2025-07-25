@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 router.get('/', async (req, res) => {
     try {
-        let { page = 1, limit = 6, category, technology, year } = req.query;
+        let { page = 1, limit = 6, category, technology, year, featured, sort } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
@@ -34,12 +34,40 @@ router.get('/', async (req, res) => {
             };
         }
 
+        // Nuevo filtro para proyectos destacados (favoritos)
+        if (featured === 'true') {
+            filter.featured = true;
+        }
+
+        // Opciones de ordenamiento dinámico
+        const sortOption = {};
+        switch (sort) {
+            case 'featured':
+                // Ordena por destacados primero, y luego por fecha de creación descendente
+                sortOption.featured = -1;
+                sortOption.createdAt = -1;
+                break;
+            case 'oldest':
+                // Ordena por más antiguo
+                sortOption.createdAt = 1;
+                break;
+            case 'name_asc':
+                // Ordena por nombre (A-Z) usando el título en español
+                sortOption['title.es'] = 1;
+                break;
+            case 'newest':
+            default:
+                // Ordena por más reciente (comportamiento por defecto)
+                sortOption.createdAt = -1;
+                break;
+        }
+
         const total = await Project.countDocuments(filter);
 
         const projects = await Project.find(filter)
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 })
+            .sort(sortOption)
             .populate('technologies')
             .populate('category')
             .populate('images');
