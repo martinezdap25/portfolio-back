@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 router.get('/', async (req, res) => {
     try {
-        let { page = 1, limit = 6, category, technology } = req.query;
+        let { page = 1, limit = 6, category, technology, year } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
         const skip = (page - 1) * limit;
@@ -17,14 +17,21 @@ router.get('/', async (req, res) => {
         const filter = {};
         if (category) {
             const categoryArray = Array.isArray(category) ? category : [category];
-            // Usamos $in para que coincida con cualquier categoría en el array (comportamiento OR).
             filter.category = { $in: categoryArray.map(id => new mongoose.Types.ObjectId(id)) };
         }
 
         if (technology) {
             const technologyArray = Array.isArray(technology) ? technology : [technology];
-            // Usamos $in para encontrar proyectos que contengan AL MENOS UNA de las tecnologías seleccionadas (comportamiento OR).
             filter.technologies = { $in: technologyArray.map(id => new mongoose.Types.ObjectId(id)) };
+        }
+
+        if (year) {
+            const yearArray = (Array.isArray(year) ? year : [year]).map(y => parseInt(y, 10));
+            // Usamos $expr para poder aplicar funciones de agregación como $year en una consulta find.
+            // Como 'createdAt' es un String, primero lo convertimos a Date con $toDate.
+            filter.$expr = {
+                $in: [{ $year: { $toDate: '$createdAt' } }, yearArray]
+            };
         }
 
         const total = await Project.countDocuments(filter);
