@@ -44,21 +44,24 @@ router.get('/', async (req, res) => {
         const sortOption = {};
         switch (sort) {
             case 'featured':
-                // Ordena por destacados primero, y luego por fecha de creación descendente
                 sortOption.featured = -1;
                 sortOption.createdAt = -1;
                 break;
             case 'oldest':
-                // Ordena por más antiguo
+            case 'year_asc':
                 sortOption.createdAt = 1;
                 break;
+            case 'newest':
+            case 'year_desc':
+                sortOption.createdAt = -1;
+                break;
             case 'name_asc':
-                // Ordena por nombre (A-Z) usando el título en español
                 sortOption['title.es'] = 1;
                 break;
-            case 'newest':
+            case 'name_desc':
+                sortOption['title.es'] = -1;
+                break;
             default:
-                // Ordena por más reciente (comportamiento por defecto)
                 sortOption.createdAt = -1;
                 break;
         }
