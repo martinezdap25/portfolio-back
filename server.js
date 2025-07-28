@@ -8,8 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = [
-    'http://localhost:3000', // Tu frontend en desarrollo
-    'https://ignacio-martinez.vercel.app' // Asumo que esta es la URL de tu frontend desplegado, ¡ajústala si es diferente!
+    'http://localhost:3000',
+    'https://ignacio-martinez.vercel.app'
 ];
 
 const corsOptions = {
@@ -33,6 +33,9 @@ app.get('/', (req, res) => {
 
 const projectsRoutes = require('./routes/projects');
 app.use('/projects', projectsRoutes);
+
+const technologiesRoutes = require('./routes/technologies');
+app.use('/technologies', technologiesRoutes);
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI)
