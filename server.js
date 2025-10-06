@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://ignacio-martinez.vercel.app'
+    'https://ignacio-martinez.vercel.app',
+    'https://especieradonoctavio.vercel.app'
 ];
 
 const corsOptions = {
